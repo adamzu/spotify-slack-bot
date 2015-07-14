@@ -25,15 +25,12 @@ class SpotifySlackBot():
             connection_state_listener)
         self.session.login(settings.SPOTIFYUSERNAME, settings.SPOTIFYPASSWORD)
         logged_in_event.wait()
-        
-        print(self.session.user)
-        search = self.session.search('massive attack')
-        search.load()
+        loop.stop()
+        print("DJ Lamp starting up...")
         
         # Get the user list
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
-
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song')
@@ -97,6 +94,7 @@ class SpotifySlackBot():
         ]
         
         if self.sc.rtm_connect():
+            print("DJ Lamp is online!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
@@ -107,6 +105,7 @@ class SpotifySlackBot():
                                 function(event)
                                 break
                 time.sleep(1)
+                
 
 if __name__ == '__main__':
     bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL)
