@@ -4,16 +4,19 @@ import os
 import re
 import time
 import json
+import pkgutil
+import spotify
 
 class SpotifySlackBot():
     def __init__(self, api_key, broadcast_channel):
         self.broadcast_channel = broadcast_channel
         self.sc = SlackClient(api_key)
+        self.session = spotify.Session()
 
         # Get the user list
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
-        
+
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song')
