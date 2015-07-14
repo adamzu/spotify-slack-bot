@@ -49,7 +49,8 @@ class SpotifySlackBot():
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
                                  "- `skip`: I'll skip the current song and play another one.\n"
                                  "\n"
-                                 "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*, just so everyone knows what is going on. Please use these only if you really need to :)"
+                                 "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
+                                 " just so everyone knows what is going on. Please use these only if you really need to :)"
                                     % (self.broadcast_channel)
         )
 
