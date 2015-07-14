@@ -1,10 +1,10 @@
 from subprocess import check_output
 from slackclient import SlackClient
-import os
 import re
 import time
 import json
-import pkgutil
+import threading
+import private_settings as settings
 import spotify
 
 class SpotifySlackBot():
@@ -12,7 +12,24 @@ class SpotifySlackBot():
         self.broadcast_channel = broadcast_channel
         self.sc = SlackClient(api_key)
         self.session = spotify.Session()
-
+        
+        logged_in_event = threading.Event()
+        def connection_state_listener(session):
+            if session.connection.state is spotify.ConnectionState.LOGGED_IN:
+                logged_in_event.set()
+        
+        loop = spotify.EventLoop(self.session)
+        loop.start()
+        self.session.on(
+            spotify.SessionEvent.CONNECTION_STATE_UPDATED,
+            connection_state_listener)
+        self.session.login(settings.SPOTIFYUSERNAME, settings.SPOTIFYPASSWORD)
+        logged_in_event.wait()
+        
+        print(self.session.user)
+        search = self.session.search('massive attack')
+        search.load()
+        
         # Get the user list
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
@@ -39,7 +56,7 @@ class SpotifySlackBot():
     def command_playback_skip(self, event):
         self.run_spotify_script('playback-skip')
         self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
-        self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else...")
+        self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else")
 
     def command_help(self, event):
         self.sc.rtm_send_message(event['channel'],
@@ -92,5 +109,5 @@ class SpotifySlackBot():
                 time.sleep(1)
 
 if __name__ == '__main__':
-    bot = SpotifySlackBot(os.environ.get('SPOTIFYSLACK_SLACK_API_KEY'), os.environ.get('SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL'))
+    bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL)
     bot.run()
