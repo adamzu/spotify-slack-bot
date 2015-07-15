@@ -118,7 +118,7 @@ class SpotifySlackBot():
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
-            # self.sc.rtm_send_message(self.broadcast_channel, "@group, DJ Lamp is now online and taking requests!")
+            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online and taking requests!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
@@ -145,4 +145,5 @@ if __name__ == '__main__':
         bot.run()
     except KeyboardInterrupt:
         print("\rDJ Lamp signing off!")
+        bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
         sys.exit(0)
