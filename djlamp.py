@@ -74,8 +74,18 @@ class SpotifySlackBot():
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
 
-    def command_play_song(self, event, arg):
-        self.sc.rtm_send_message(event['channel'], arg)
+    def command_play_song(self, event):
+        song_name = arg = " ".join(event['text'].split()[1:])
+        search = self.session.search(query=song_name)
+        search.load()
+        songs = search.tracks
+        descriptions = ""
+        for song in songs:
+            for artist in song.artists:
+                descriptions += artist.name
+            descriptions += " - " + song.name + "\n"
+
+        self.sc.rtm_send_message(event['channel'], descriptions)
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
@@ -106,11 +116,7 @@ class SpotifySlackBot():
                     if event.get('type') == 'message' and event.get('channel')[0] == 'D':
                         for (expression, function) in commands:
                             if re.match(expression, event['text']):
-                                arg = " ".join(event['text'].split()[1:])
-                                try:
-                                    function(event, arg)
-                                except TypeError:
-                                    function(event)
+                                function(event)
                                 break
                 time.sleep(1)
                 
