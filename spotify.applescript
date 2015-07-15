@@ -22,14 +22,6 @@ on run {command, argument}
 			previous track
 		else if command is "play-song" then
 			play track argument
-						set theTrack to current track
-			
-			set theTrackArtist to artist of theTrack
-			set theTrackName to name of theTrack
-			set theTrackId to id of theTrack
-			return theTrackId & "
-" & theTrackName & "
-" & theTrackArtist
 		end if
 		
 	end tell
