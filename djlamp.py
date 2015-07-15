@@ -61,14 +61,15 @@ class SpotifySlackBot():
     def command_help(self, event):
         self.sc.rtm_send_message(event['channel'],
                                  "Hey, how are you?  I'm here to help you using our office playlist.\n"
-                                 "I can give you some information about what is playing right now. Just send the command:\n"
-                                 "- `song`: I'll tell you which song is playing and who is the artist.\n"
+                                 "I can give you some information about what is playing now and what will play afterwords, with the following commands:\n"
+                                 "- `song` or `current`: I'll tell you which song is playing and who is the artist.\n"
+                                 "- `queue`: I'll tell you all the songs in the queue.\n"
                                  "\n"
                                  "I can also control the playlist, with the following commands:\n"
                                  "- `play`: I'll resume playback of the playlist, if it is paused.\n"
-                                 "- `play SONG`: I'll search Spotify for a song that matches your SONG query and then play it.\n"
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `skip`: I'll skip the current song and play another one.\n"
+                                 "- `play SONG` or `queue SONG`: I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                 "- `skip` or `next`: I'll skip the current song and play another one.\n"
                                  "\n"
                                  "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
                                  " just so everyone knows what is going on. Please use these only if you really need to :)"
@@ -83,12 +84,18 @@ class SpotifySlackBot():
         if not self.song_queue:
             message += "\t<EMPTY>"
         else:
-            message += "TODO"
+            for number, (song, requester_channel) in enumerate(self.song_queue):
+                song_id = song.link
+                song_name = song.name
+                song_artists = []
+                for artist in song.artists:
+                    song_artists.append(artist.name)
+                song_artists = (", ".join(song_artists))[::-1].replace(", "[::-1], ", and "[::-1])[::-1]
+                requester = self.get_username(requester_channel)
+                message += "\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_name, song_artists, song_id, requester)
         self.sc.rtm_send_message(event['channel'], message)
-            
-            
 
-    def command_play_song(self, event):
+    def command_queue_song(self, event):
         song_query = arg = " ".join(event['text'].split()[1:])
         search = self.session.search(query=song_query)
         search.load()
@@ -103,10 +110,26 @@ class SpotifySlackBot():
             for artist in song.artists:
                 song_artists.append(artist.name)
             song_artists = (", ".join(song_artists))[::-1].replace(", "[::-1], ", and "[::-1])[::-1]
-            self.run_spotify_script('play-song', str(song_id))
-            message = "Hey, now playing *%s* by *%s*, as requested by %s. You can open it on Spotify: %s" % (song_name, song_artists, self.get_username(event['user']), song_id)
+            requester = self.get_username(event['user'])
+            message = "%s added *%s* by *%s* (%s) to the song queue." % (requester, song_name, song_artists, song_id)
             self.sc.rtm_send_message(self.broadcast_channel, message)
-            self.sc.rtm_send_message(event['channel'], "Sure, let's play *%s* by *%s*" % (song_name, song_artists))
+            self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* to the queue." % (song_name, song_artists))
+            self.song_queue.append((song, event['user']))
+
+    def command_play_song(self, event):
+        song_tuple = self.song_queue.pop()
+        song = song_tuple[0]
+        requester_channel = song_tuple[1]
+        requester = self.get_username(requester_channel)
+        song_id = song.link
+        song_name = song.name
+        song_artists = []
+        for artist in song.artists:
+            song_artists.append(artist.name)
+        song_artists = (", ".join(song_artists))[::-1].replace(", "[::-1], ", and "[::-1])[::-1]
+        message = "Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_name, song_artists, requester, song_id)
+        self.sc.rtm_send_message(self.broadcast_channel, message)
+        self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s*!" % (song_name, song_artists))
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
@@ -119,13 +142,13 @@ class SpotifySlackBot():
     
     def run(self):
         commands = [
-            ('song', self.command_current_song),
+            ('song|current', self.command_current_song),
             ('play$', self.command_playback_play),
             ('pause', self.command_playback_pause),
             ('skip|next', self.command_playback_skip),
             ('hey|help', self.command_help),
             ('queue$', self.command_show_queue),
-            ('play .+', self.command_play_song),
+            ('play .+|queue .+', self.command_queue_song),
             ('.+', self.command_unknown)
         ]
         
