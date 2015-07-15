@@ -121,11 +121,13 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.song_queue.append((song, event['user']))
 
-    def command_play_song(self, event):
+    def play_next_song(self):
         (song, requester_channel) = self.song_queue.pop()
         song_data = _get_song_data(song)
         requester = self.get_username(requester_channel)
         message = "Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
+        
+        self.run_spotify_script('play-song', song_data['song_id'])
         
         self.sc.rtm_send_message(self.broadcast_channel, message)
         self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
@@ -182,3 +184,18 @@ if __name__ == '__main__':
         print("\rDJ Lamp signing off!")
         bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
         sys.exit(0)
+        
+#             
+# song_ended_event = threading.Event()
+# 
+# def song_state_listener(session):
+#     song_ended_event.set()
+#     self.play_next_song()
+#     song_ended_event.clear()
+# 
+# loop = spotify.EventLoop(self.session)
+# loop.start()
+# self.session.on(
+#     spotify.SessionEvent.END_OF_TRACK,
+#     song_state_listener)
+
