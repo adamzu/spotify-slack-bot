@@ -33,6 +33,7 @@ class SpotifySlackBot():
         # Get the user list
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
+        self.song_queue = []
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -77,12 +78,22 @@ class SpotifySlackBot():
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
 
+    def command_show_queue(self, event):
+        message =  "*Song Queue:*\n"
+        if not self.song_queue:
+            message += "\t<EMPTY>"
+        else:
+            message += "TODO"
+        self.sc.rtm_send_message(event['channel'], message)
+            
+            
+
     def command_play_song(self, event):
         song_query = arg = " ".join(event['text'].split()[1:])
         search = self.session.search(query=song_query)
         search.load()
         songs = search.tracks
-        if len(songs) < 1:
+        if not songs:
             self.sc.rtm_send_message(event['channel'], "Hey there! Sorry, I can't seem to find that song. Please try another.")
         else:
             song = songs[0]
@@ -113,6 +124,7 @@ class SpotifySlackBot():
             ('pause', self.command_playback_pause),
             ('skip|next', self.command_playback_skip),
             ('hey|help', self.command_help),
+            ('queue$', self.command_show_queue),
             ('play .+', self.command_play_song),
             ('.+', self.command_unknown)
         ]
