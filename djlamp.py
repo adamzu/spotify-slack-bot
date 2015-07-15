@@ -21,6 +21,9 @@ def _get_song_artists(song):
         song_artists = (", ".join(song_artists))[::-1].replace(", "[::-1], ", and "[::-1], 1)[::-1]
     return song_artists
 
+def _get_song_data(song):
+    return dict(song_id = song.link, song_name = song.name, song_artists = _get_song_artists(song))
+
 class SpotifySlackBot():
     def __init__(self, api_key, broadcast_channel):
         self.broadcast_channel = broadcast_channel
@@ -96,11 +99,9 @@ class SpotifySlackBot():
             message += "\t<EMPTY>"
         else:
             for number, (song, requester_channel) in enumerate(self.song_queue):
-                song_id = song.link
-                song_name = song.name
-                song_artists = _get_song_artists(song)
+                song_data = _get_song_data(song)
                 requester = self.get_username(requester_channel)
-                message += "\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_name, song_artists, song_id, requester)
+                message += "\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_data['song_name'], song_data['song_artists'], song_data['song_id'], requester)
         self.sc.rtm_send_message(event['channel'], message)
 
     def command_queue_song(self, event):
@@ -112,26 +113,22 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(event['channel'], "Hey there! Sorry, I can't seem to find that song. Please try another.")
         else:
             song = songs[0]
-            song_id = song.link
-            song_name = song.name
-            song_artists = _get_song_artists(song)
+            song_data = _get_song_data(song)
             requester = self.get_username(event['user'])
-            message = "%s added *%s* by *%s* (%s) to the song queue." % (requester, song_name, song_artists, song_id)
+            message = "%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
+            
             self.sc.rtm_send_message(self.broadcast_channel, message)
-            self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_name, song_artists, song_id))
+            self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.song_queue.append((song, event['user']))
 
     def command_play_song(self, event):
-        song_tuple = self.song_queue.pop()
-        song = song_tuple[0]
-        requester_channel = song_tuple[1]
+        (song, requester_channel) = self.song_queue.pop()
+        song_data = _get_song_data(song)
         requester = self.get_username(requester_channel)
-        song_id = song.link
-        song_name = song.name
-        song_artists = _get_song_artists(song)
-        message = "Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_name, song_artists, requester, song_id)
+        message = "Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
+        
         self.sc.rtm_send_message(self.broadcast_channel, message)
-        self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s (%s)*!" % (song_name, song_artists, song_id))
+        self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
