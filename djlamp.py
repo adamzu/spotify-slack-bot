@@ -33,7 +33,7 @@ class SpotifySlackBot():
         self.users = json.loads(response)['members']
 
     def command_current_song(self, event):
-        data = self.run_spotify_script('current-song')
+        data = self.run_spotify_script('current-song','')
         data = data.strip().split('\n')
         data = {"id": data[0], "name": data[1], "artist": data[2]}
         message = "Hey, the current song is *%s* by *%s*. You can open it on Spotify: %s" % (data['name'], data['artist'], data['id'])
@@ -41,17 +41,17 @@ class SpotifySlackBot():
         self.sc.rtm_send_message(event['channel'], message)
         
     def command_playback_play(self, event):
-        self.run_spotify_script('playback-play')
+        self.run_spotify_script('playback-play','')
         self.sc.rtm_send_message(self.broadcast_channel, "*Resumed playback*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Sure, let the music play!")
 
     def command_playback_pause(self, event):
-        self.run_spotify_script('playback-pause')
+        self.run_spotify_script('playback-pause','')
         self.sc.rtm_send_message(self.broadcast_channel, "*Paused playback*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Alright, let's have some silence for now.")
 
     def command_playback_skip(self, event):
-        self.run_spotify_script('playback-skip')
+        self.run_spotify_script('playback-skip','')
         self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else")
 
@@ -75,17 +75,24 @@ class SpotifySlackBot():
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
 
     def command_play_song(self, event):
-        song_name = arg = " ".join(event['text'].split()[1:])
-        search = self.session.search(query=song_name)
+        song_query = arg = " ".join(event['text'].split()[1:])
+        search = self.session.search(query=song_query)
         search.load()
         songs = search.tracks
-        descriptions = ""
-        for song in songs:
+        if len(songs) < 1:
+            self.sc.rtm_send_message(event['channel'], "Hey there! Sorry, I can't seem to find that song. Please try another.")
+        else:
+            song = songs[0]
+            song_id = song.link
+            song_name = song.name
+            song_artists = []
             for artist in song.artists:
-                descriptions += artist.name
-            descriptions += " - " + song.name + "\n"
-
-        self.sc.rtm_send_message(event['channel'], descriptions)
+                song_artists.append(artist.name)
+            song_artists = (", ".join(song_artists))[::-1].replace(", "[::-1], ", and "[::-1])[::-1]
+            self.run_spotify_script('play-song', str(song_id))
+            message = "Hey, now playing *%s* by *%s*, as requested by %s. You can open it on Spotify: %s" % (song_name, song_artists, self.get_username(event['user']), song_id)
+            self.sc.rtm_send_message(self.broadcast_channel, message)
+            self.sc.rtm_send_message(event['channel'], "Sure, let's play *%s* by *%s*" % (song_name, song_artists))
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
