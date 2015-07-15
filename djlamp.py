@@ -4,8 +4,11 @@ import re
 import time
 import json
 import threading
+import signal
+import sys
 import private_settings as settings
 import spotify
+
 
 class SpotifySlackBot():
     def __init__(self, api_key, broadcast_channel):
@@ -26,7 +29,6 @@ class SpotifySlackBot():
         self.session.login(settings.SPOTIFYUSERNAME, settings.SPOTIFYPASSWORD)
         logged_in_event.wait()
         loop.stop()
-        print("DJ Lamp starting up...")
         
         # Get the user list
         response = self.sc.api_call('users.list')
@@ -116,6 +118,7 @@ class SpotifySlackBot():
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
+            # self.sc.rtm_send_message(self.broadcast_channel, "@group, DJ Lamp is now online and taking requests!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
@@ -126,8 +129,20 @@ class SpotifySlackBot():
                                 function(event)
                                 break
                 time.sleep(1)
-                
+        else:
+            print("\rDJ Lamp aborted")
+            sys.exit(0)
 
 if __name__ == '__main__':
-    bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL)
-    bot.run()
+    print("DJ Lamp starting up...")
+    try:
+        bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL)
+    except KeyboardInterrupt:
+        print("\rDJ Lamp aborted")
+        sys.exit(0)
+        
+    try:
+        bot.run()
+    except KeyboardInterrupt:
+        print("\rDJ Lamp signing off!")
+        sys.exit(0)
