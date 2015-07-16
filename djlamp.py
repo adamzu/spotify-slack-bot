@@ -57,8 +57,8 @@ class SpotifySlackBot():
         
         self.playlist_container = self.session.playlist_container
         self.playlist_container.add_new_playlist(settings.PLAYLIST_NAME)
-        self.queue_playlist = self.session.playlist_container[0]
-        self.queue_playlist.collaborative = True;
+        self.queue_playlist = self.session.playlist_container[-1].load()
+        self.queue_playlist.set_in_ram()
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -137,6 +137,7 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
             self.song_queue.append((song, event['user']))
+            self.queue_playlist.load().add_tracks(song.load())
 
     def command_remove_from_queue(self, event):
         number = int(event['text'].split()[1])
@@ -213,7 +214,6 @@ class SpotifySlackBot():
                 time.sleep(1)
         else:
             print("\rDJ Lamp aborted")
-            del self.session.playlist_container[0]
             sys.exit(0)
 
 if __name__ == '__main__':
@@ -229,5 +229,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\rDJ Lamp signing off!")
         bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
-        del bot.session.playlist_container[0]
         sys.exit(0)
