@@ -24,6 +24,12 @@ def _get_song_artists(song):
 def _get_song_data(song):
     return dict(song_id = song.link, song_name = song.name, song_artists = _get_song_artists(song))
 
+def _get_recommendations(song_id):
+    REQUEST_URL = "https://djlamp.herokuapp.com/api/recommend?id=%s" % song_id
+    response = json.loads(requests.get(REQUEST_URL).content)
+    recommendations = response["results"]
+    return recommendations
+
 class SpotifySlackBot():
     def __init__(self, api_key, broadcast_channel):
         self.broadcast_channel = broadcast_channel
@@ -218,17 +224,3 @@ if __name__ == '__main__':
         print("\rDJ Lamp signing off!")
         bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
         sys.exit(0)
-                   
-# song_ended_event = threading.Event()
-# 
-# def song_state_listener(session):
-#     song_ended_event.set()
-#     self.play_next_song()
-#     song_ended_event.clear()
-# 
-# loop = spotify.EventLoop(self.session)
-# loop.start()
-# self.session.on(
-#     spotify.SessionEvent.END_OF_TRACK,
-#     song_state_listener)
-
