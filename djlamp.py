@@ -13,8 +13,7 @@ def _get_song_artists(song):
     song_artists = []
     num_artists = len(song.artists)
     for artist in song.artists:
-        song_artists.append(str(artist.name))
-    print(song_artists)
+        song_artists.append(artist.name.encode('utf-8'))
     if num_artists == 2:
         song_artists = " and ".join(song_artists)
     else:
@@ -59,18 +58,18 @@ class SpotifySlackBot():
         
     def command_playback_play(self, event):
         self.run_spotify_script('playback-play','')
-        self.sc.rtm_send_message(self.broadcast_channel, "*Resumed playback*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Sure, let the music play!")
+        self.sc.rtm_send_message(self.broadcast_channel, "*Resumed playback*, as requested by %s." % (self.get_username(event['user'])))
 
     def command_playback_pause(self, event):
         self.run_spotify_script('playback-pause','')
-        self.sc.rtm_send_message(self.broadcast_channel, "*Paused playback*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Alright, let's have some silence for now.")
+        self.sc.rtm_send_message(self.broadcast_channel, "*Paused playback*, as requested by %s." % (self.get_username(event['user'])))
 
     def command_playback_skip(self, event):
         self.run_spotify_script('playback-skip','')
-        self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
         self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else")
+        self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
 
     def command_help(self, event):
         self.sc.rtm_send_message(event['channel'],
@@ -90,9 +89,6 @@ class SpotifySlackBot():
                                     % (self.broadcast_channel)
         )
 
-    def command_unknown(self, event):
-        self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
-
     def command_show_queue(self, event):
         message =  "*Song Queue:*\n"
         if not self.song_queue:
@@ -105,7 +101,7 @@ class SpotifySlackBot():
         self.sc.rtm_send_message(event['channel'], message)
 
     def command_queue_song(self, event):
-        song_query = arg = " ".join(event['text'].split()[1:])
+        song_query = " ".join(event['text'].split()[1:])
         search = self.session.search(query=song_query)
         search.load()
         songs = search.tracks
@@ -117,9 +113,27 @@ class SpotifySlackBot():
             requester = self.get_username(event['user'])
             message = "%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
             
-            self.sc.rtm_send_message(self.broadcast_channel, message)
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+            self.sc.rtm_send_message(self.broadcast_channel, message)
             self.song_queue.append((song, event['user']))
+
+    def command_remove_from_queue(self, event):
+        number = int(event['text'].split()[1])
+        message = ""
+        if number > len(self.song_queue):
+            message = "Sorry, there is no song #*%s* on the queue. Type in a different number." % number
+        else:
+            index = number - 1
+            (song, requester_channel) = self.song_queue[index]
+            song_data = _get_song_data(song)
+            if event['user'] != requester_channel:
+                message = "Sorry, you didn't request song #*%s*. *%s* by *%s*, so you can't remove it. Type in a different number." % (number, song_data['song_name'], song_data['song_artists'])
+            else:
+                self.song_queue.pop(index)
+                message = "Sure, I'll remove song #*%s*. *%s* by *%s* from the queue." % (number, song_data['song_name'], song_data['song_artists'])
+                self.sc.rtm_send_message(self.broadcast_channel,
+                                         "%s removed song #*%s*. *%s* by *%s* from the queue." % (self.get_username(requester_channel), number, song_data['song_name'], song_data['song_artists']))     
+        self.sc.rtm_send_message(event['channel'], message)
 
     def play_next_song(self):
         (song, requester_channel) = self.song_queue.pop()
@@ -129,15 +143,18 @@ class SpotifySlackBot():
         
         self.run_spotify_script('play-song', song_data['song_id'])
         
-        self.sc.rtm_send_message(self.broadcast_channel, message)
         self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+        self.sc.rtm_send_message(self.broadcast_channel, message)
+
+    def command_unknown(self, event):
+        self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
 
-    def get_username(self, id):
+    def get_username(self, user_id):
         for user in self.users:
-            if user['id'] == id:
+            if user['id'] == user_id:
                 return '@%s' % user['name']
         return 'someone'
     
@@ -150,6 +167,7 @@ class SpotifySlackBot():
             ('hey|help', self.command_help),
             ('queue$', self.command_show_queue),
             ('play .+|queue .+', self.command_queue_song),
+            ('remove [1-9]([0-9])*', self.command_remove_from_queue),
             ('.+', self.command_unknown)
         ]
         
@@ -184,8 +202,7 @@ if __name__ == '__main__':
         print("\rDJ Lamp signing off!")
         bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
         sys.exit(0)
-        
-#             
+                   
 # song_ended_event = threading.Event()
 # 
 # def song_state_listener(session):
