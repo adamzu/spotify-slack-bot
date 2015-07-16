@@ -4,6 +4,7 @@ import re
 import time
 import json
 import threading
+import requests
 import signal
 import sys
 import private_settings as settings
@@ -91,10 +92,18 @@ class SpotifySlackBot():
 
     def command_show_queue(self, event):
         message =  "*Song Queue:*\n"
+        num_songs = len(self.song_queue)
         if not self.song_queue:
-            message += "\t<EMPTY>"
+            message += "\tEMPTY"
         else:
             for number, (song, requester_channel) in enumerate(self.song_queue):
+                if(number > 9):
+                    num_additional_songs = num_songs - number
+                    message += "\t\t...%s more song" % num_additional_songs
+                    if num_additional_songs > 1:
+                        message += "s"
+                    message += "..."
+                    break
                 song_data = _get_song_data(song)
                 requester = self.get_username(requester_channel)
                 message += u"\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_data['song_name'], song_data['song_artists'], song_data['song_id'], requester)
@@ -136,15 +145,21 @@ class SpotifySlackBot():
         self.sc.rtm_send_message(event['channel'], message)
 
     def play_next_song(self):
-        (song, requester_channel) = self.song_queue.pop()
-        song_data = _get_song_data(song)
-        requester = self.get_username(requester_channel)
-        message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
-        
-        self.run_spotify_script('play-song', song_data['song_id'])
-        
-        self.sc.rtm_send_message(requester_channel, "Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
-        self.sc.rtm_send_message(self.broadcast_channel, message)
+        if self.song_queue:
+            (song, requester_channel) = self.song_queue.pop()
+            song_data = _get_song_data(song)
+            requester = self.get_username(requester_channel)
+            message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
+            
+            self.run_spotify_script('play-song', song_data['song_id'])
+            
+            self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+            self.sc.rtm_send_message(self.broadcast_channel, message)
+        else:
+            self.auto_queue()
+
+    def auto_queue(self):
+        pass
 
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
