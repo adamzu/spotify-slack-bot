@@ -54,6 +54,11 @@ class SpotifySlackBot():
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
         self.song_queue = []
+        
+        self.playlist_container = self.session.playlist_container
+        self.playlist_container.add_new_playlist(settings.PLAYLIST_NAME)
+        self.queue_playlist = self.session.playlist_container[0]
+        self.queue_playlist.collaborative = True;
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -208,6 +213,7 @@ class SpotifySlackBot():
                 time.sleep(1)
         else:
             print("\rDJ Lamp aborted")
+            del self.session.playlist_container[0]
             sys.exit(0)
 
 if __name__ == '__main__':
@@ -223,4 +229,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\rDJ Lamp signing off!")
         bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
+        del bot.session.playlist_container[0]
         sys.exit(0)
