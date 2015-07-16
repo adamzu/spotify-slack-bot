@@ -55,10 +55,7 @@ class SpotifySlackBot():
         self.users = json.loads(response)['members']
         self.song_queue = []
         
-        self.playlist_container = self.session.playlist_container
-        self.playlist_container.add_new_playlist(settings.PLAYLIST_NAME)
-        self.queue_playlist = self.session.playlist_container[-1].load()
-        self.queue_playlist.set_in_ram()
+        print self.get_player_position()
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -137,7 +134,6 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
             self.song_queue.append((song, event['user']))
-            self.queue_playlist.load().add_tracks(song.load())
 
     def command_remove_from_queue(self, event):
         number = int(event['text'].split()[1])
@@ -179,6 +175,10 @@ class SpotifySlackBot():
 
     def run_spotify_script(self, *args):
         return check_output(['./spotify.applescript'] + list(args))
+
+    def get_player_position(self):
+        output = check_output(['./checkposition.applescript'])
+        return float(output.strip()) / 1000
 
     def get_username(self, user_id):
         for user in self.users:
