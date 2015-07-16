@@ -2,6 +2,6 @@
 on run
 	launch application "Spotify"
 	tell application "Spotify"
-		return player position
+		return player position & "\n" & player state as string
 	end tell
 end run

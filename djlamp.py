@@ -159,9 +159,8 @@ class SpotifySlackBot():
             message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
 
             self.run_spotify_script('play-song', song_data['song_id'])
-
-            self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
-            self.sc.rtm_send_message(self.broadcast_channel, message)
+            # self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+            # self.sc.rtm_send_message(self.broadcast_channel, message)
         else:
             self.auto_queue()
 
@@ -175,8 +174,10 @@ class SpotifySlackBot():
         return check_output(['./spotify.applescript'] + list(args))
 
     def get_player_position(self):
-        output = check_output(['./checkposition.applescript'])
-        return float(output.strip()) / 1000
+        output = check_output(['./checkposition.applescript']).split("\n",1)
+        output[0] = float(output[0]) / 1000
+        output[1] = output[1].strip()
+        return output
 
     def get_username(self, user_id):
         for user in self.users:
@@ -211,8 +212,9 @@ class SpotifySlackBot():
                                 break
                 position = self.get_player_position()
                 print position
-                if position == 0:
+                if position == [0, 'paused']:
                     self.play_next_song()
+                    # self.sc.rtm_send_message(self.broadcast_channel, "new song!")
                 time.sleep(1)
         else:
             print("\rDJ Lamp aborted")
