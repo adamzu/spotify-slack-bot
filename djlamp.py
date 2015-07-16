@@ -102,7 +102,7 @@ class SpotifySlackBot():
         if not self.song_queue:
             message += "\tEMPTY"
         else:
-            for number, (song, requester_channel) in enumerate(self.song_queue):
+            for number, (song, requester, requester_channel) in enumerate(self.song_queue):
                 if(number > 9):
                     num_additional_songs = num_songs - number
                     message += "\t\t...%s more song" % num_additional_songs
@@ -111,7 +111,7 @@ class SpotifySlackBot():
                     message += "..."
                     break
                 song_data = _get_song_data(song)
-                requester = self.get_username(requester_channel)
+                requester = self.get_username(requester)
                 message += u"\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_data['song_name'], song_data['song_artists'], song_data['song_id'], requester)
         self.sc.rtm_send_message(event['channel'], message)
 
@@ -131,7 +131,7 @@ class SpotifySlackBot():
             
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
-            self.song_queue.append((song, event['user']))
+            self.song_queue.append((song, event['user'], event['channel']))
 
     def command_remove_from_queue(self, event):
         number = int(event['text'].split()[1])
@@ -140,27 +140,27 @@ class SpotifySlackBot():
             message = "Sorry, there is no song #*%s* on the queue. Type in a different number." % number
         else:
             index = number - 1
-            (song, requester_channel) = self.song_queue[index]
+            (song, requester, requester_channel) = self.song_queue[index]
             song_data = _get_song_data(song)
-            if event['user'] != requester_channel:
+            if event['user'] != requester:
                 message = u"Sorry, you didn't request song #*%s*. *%s* by *%s*, so you can't remove it. Type in a different number." % (number, song_data['song_name'], song_data['song_artists'])
             else:
                 self.song_queue.pop(index)
                 message = u"Sure, I'll remove song #*%s*. *%s* by *%s* from the queue." % (number, song_data['song_name'], song_data['song_artists'])
                 self.sc.rtm_send_message(self.broadcast_channel,
-                                         u"%s removed song #*%s*. *%s* by *%s* from the queue." % (self.get_username(requester_channel), number, song_data['song_name'], song_data['song_artists']))     
+                                         u"%s removed song #*%s*. *%s* by *%s* from the queue." % (self.get_username(requester), number, song_data['song_name'], song_data['song_artists']))     
         self.sc.rtm_send_message(event['channel'], message)
 
     def play_next_song(self):
         if self.song_queue:
-            (song, requester_channel) = self.song_queue.pop()
+            (song, requester, requester_channel) = self.song_queue.pop(0)
             song_data = _get_song_data(song)
-            requester = self.get_username(requester_channel)
+            requester = self.get_username(requester)
             message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
 
             self.run_spotify_script('play-song', song_data['song_id'])
-            # self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
-            # self.sc.rtm_send_message(self.broadcast_channel, message)
+            self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+            self.sc.rtm_send_message(self.broadcast_channel, message)
         else:
             self.auto_queue()
 
@@ -214,7 +214,6 @@ class SpotifySlackBot():
                 print position
                 if position == [0, 'paused']:
                     self.play_next_song()
-                    # self.sc.rtm_send_message(self.broadcast_channel, "new song!")
                 time.sleep(1)
         else:
             print("\rDJ Lamp aborted")
