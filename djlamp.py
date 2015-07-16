@@ -22,7 +22,7 @@ def _get_song_artists(song):
     return song_artists
 
 def _get_song_data(song):
-    return dict(song_id = song.link, song_name = song.name, song_artists = _get_song_artists(song))
+    return dict(song_id = str(song.link), song_name = song.name, song_artists = _get_song_artists(song))
 
 def _get_recommendations(song_id):
     REQUEST_URL = "https://djlamp.herokuapp.com/api/recommend?id=%s" % song_id
@@ -54,8 +54,6 @@ class SpotifySlackBot():
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
         self.song_queue = []
-        
-        print self.get_player_position()
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -159,16 +157,16 @@ class SpotifySlackBot():
             song_data = _get_song_data(song)
             requester = self.get_username(requester_channel)
             message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
-            
+
             self.run_spotify_script('play-song', song_data['song_id'])
-            
+
             self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.sc.rtm_send_message(self.broadcast_channel, message)
         else:
             self.auto_queue()
 
     def auto_queue(self):
-        pass
+        print "EMPTY"
 
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
@@ -211,6 +209,10 @@ class SpotifySlackBot():
                             if re.match(expression, event['text']):
                                 function(event)
                                 break
+                position = self.get_player_position()
+                print position
+                if position == 0:
+                    self.play_next_song()
                 time.sleep(1)
         else:
             print("\rDJ Lamp aborted")
