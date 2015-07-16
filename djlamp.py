@@ -117,12 +117,13 @@ class SpotifySlackBot():
         if not songs:
             self.sc.rtm_send_message(event['channel'], "Hey there! Sorry, I can't seem to find that song. Please try another.")
         else:
+            position = len(self.song_queue) + 1
             song = songs[0]
             song_data = _get_song_data(song)
             requester = self.get_username(event['user'])
             message = u"%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
             
-            self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
+            self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
             self.song_queue.append((song, event['user']))
 
