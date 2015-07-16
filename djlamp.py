@@ -13,7 +13,7 @@ def _get_song_artists(song):
     song_artists = []
     num_artists = len(song.artists)
     for artist in song.artists:
-        song_artists.append(artist.name.encode('utf-8'))
+        song_artists.append(artist.name)
     if num_artists == 2:
         song_artists = " and ".join(song_artists)
     else:
@@ -52,7 +52,7 @@ class SpotifySlackBot():
         data = self.run_spotify_script('current-song','')
         data = data.strip().split('\n')
         data = {"id": data[0], "name": data[1], "artist": data[2]}
-        message = "Hey, the current song is *%s* by *%s*. You can open it on Spotify: %s" % (data['name'], data['artist'], data['id'])
+        message = u"Hey, the current song is *%s* by *%s*. You can open it on Spotify: %s" % (data['name'], data['artist'], data['id'])
         
         self.sc.rtm_send_message(event['channel'], message)
         
@@ -81,7 +81,7 @@ class SpotifySlackBot():
                                  "I can also control the playlist, with the following commands:\n"
                                  "- `play`: I'll resume playback of the playlist, if it is paused.\n"
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `play SONG` or `queue SONG`: I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                 "- `queue SONG` or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
                                  "- `skip` or `next`: I'll skip the current song and play another one.\n"
                                  "\n"
                                  "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
@@ -97,7 +97,7 @@ class SpotifySlackBot():
             for number, (song, requester_channel) in enumerate(self.song_queue):
                 song_data = _get_song_data(song)
                 requester = self.get_username(requester_channel)
-                message += "\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_data['song_name'], song_data['song_artists'], song_data['song_id'], requester)
+                message += u"\t*%s*. *%s* by *%s* (%s) - requested by %s\n" % (number + 1, song_data['song_name'], song_data['song_artists'], song_data['song_id'], requester)
         self.sc.rtm_send_message(event['channel'], message)
 
     def command_queue_song(self, event):
@@ -111,7 +111,7 @@ class SpotifySlackBot():
             song = songs[0]
             song_data = _get_song_data(song)
             requester = self.get_username(event['user'])
-            message = "%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
+            message = u"%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
             
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue." % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.sc.rtm_send_message(self.broadcast_channel, message)
@@ -127,19 +127,19 @@ class SpotifySlackBot():
             (song, requester_channel) = self.song_queue[index]
             song_data = _get_song_data(song)
             if event['user'] != requester_channel:
-                message = "Sorry, you didn't request song #*%s*. *%s* by *%s*, so you can't remove it. Type in a different number." % (number, song_data['song_name'], song_data['song_artists'])
+                message = u"Sorry, you didn't request song #*%s*. *%s* by *%s*, so you can't remove it. Type in a different number." % (number, song_data['song_name'], song_data['song_artists'])
             else:
                 self.song_queue.pop(index)
-                message = "Sure, I'll remove song #*%s*. *%s* by *%s* from the queue." % (number, song_data['song_name'], song_data['song_artists'])
+                message = u"Sure, I'll remove song #*%s*. *%s* by *%s* from the queue." % (number, song_data['song_name'], song_data['song_artists'])
                 self.sc.rtm_send_message(self.broadcast_channel,
-                                         "%s removed song #*%s*. *%s* by *%s* from the queue." % (self.get_username(requester_channel), number, song_data['song_name'], song_data['song_artists']))     
+                                         u"%s removed song #*%s*. *%s* by *%s* from the queue." % (self.get_username(requester_channel), number, song_data['song_name'], song_data['song_artists']))     
         self.sc.rtm_send_message(event['channel'], message)
 
     def play_next_song(self):
         (song, requester_channel) = self.song_queue.pop()
         song_data = _get_song_data(song)
         requester = self.get_username(requester_channel)
-        message = "Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
+        message = u"Now playing *%s* by *%s* , as requested by %s. You can open it on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], requester, song_data['song_id'])
         
         self.run_spotify_script('play-song', song_data['song_id'])
         
