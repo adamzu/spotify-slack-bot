@@ -17,9 +17,8 @@ on run {command, argument}
 		else if command is "playback-pause" then
 			pause
 		else if command is "playback-skip" then
-			next track
-		else if command is "playback-previous" then
 			previous track
+			pause
 		else if command is "play-song" then
 			play track argument
 		end if

@@ -55,6 +55,7 @@ class SpotifySlackBot():
         self.users = json.loads(response)['members']
         self.song_queue = []
         self.auto_queue = []
+        self.recommendations_broken = False;
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -78,6 +79,7 @@ class SpotifySlackBot():
         self.run_spotify_script('playback-skip','')
         self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else")
         self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
+        self.play_next_song()
 
     def command_help(self, event):
         self.sc.rtm_send_message(event['channel'],
@@ -132,6 +134,7 @@ class SpotifySlackBot():
             
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
+            self.recommendations_broken = False
             self.song_queue.append((song, event['user'], event['channel']))
 
     def command_remove_from_queue(self, event):
@@ -166,27 +169,31 @@ class SpotifySlackBot():
             if not self.song_queue:
                 self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: There are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
         else:
-            if not self.auto_queue:
-                self.auto_queue_songs()
-            song = self.auto_queue.pop(0)
-            song_query = song['artist'] + " " + song['title']
-            search = self.session.search(query=song_query)
-            search.load()
-            songs = search.tracks
-            if not songs:
-                song_query = song['artist'].replace(" & ", ", ") + " " + recommendation['title']
+            try:
+                if not self.auto_queue:
+                        self.auto_queue_songs()
+                song = self.auto_queue.pop(0)
+                song_query = song['artist'] + " " + song['title']
                 search = self.session.search(query=song_query)
                 search.load()
                 songs = search.tracks
-            if not songs:
-                self.play_next_song()
-            
-            song = songs[0]
-            song_data = _get_song_data(song)
-            message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
-
-            self.run_spotify_script('play-song', song_data['song_id'])
-            self.sc.rtm_send_message(self.broadcast_channel, message)
+                if not songs:
+                    song_query = song['artist'].replace(" & ", ", ") + " " + recommendation['title']
+                    search = self.session.search(query=song_query)
+                    search.load()
+                    songs = search.tracks
+                if not songs:
+                    self.play_next_song()
+                
+                song = songs[0]
+                song_data = _get_song_data(song)
+                message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
+    
+                self.run_spotify_script('play-song', song_data['song_id'])
+                self.sc.rtm_send_message(self.broadcast_channel, message)
+            except ValueError:
+                self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
+                self.recommendations_broken = True
 
     def auto_queue_songs(self):
         data = self.run_spotify_script('current-song','')
@@ -241,7 +248,7 @@ class SpotifySlackBot():
                 except ValueError:
                     position = [0, 'paused']
                     time.sleep(3)
-                if position == [0, 'paused']:
+                if position == [0, 'paused'] and not self.recommendations_broken:
                     self.play_next_song()
                 time.sleep(1)
         else:
