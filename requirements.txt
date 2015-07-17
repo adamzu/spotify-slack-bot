@@ -1,2 +1,3 @@
 requests==2.7.0
 slackclient==0.15
+pyspotify==2.0.0

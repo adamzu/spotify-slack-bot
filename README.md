@@ -1,23 +1,27 @@
-# Spotify-Slack-Bot
+# Spotify-Slack-Bot Mk. II - DJ Lamp!
+(forked from https://github.com/Cisneiros/spotify-slack-bot)
 
 *Bring life to your office with a collaborative playlist controlled via Slack!*
 
-Spotify-Slack-Bot is a Slack bot that controls an instance of Spotify.  It can tell what song is playing and control playback (e.g. playing and pausing).  Run it on a machine with Spotify installed and connected to your office speakers, create a collaborative playlist that your team can add songs to and you have some nice music on your office that can be easily paused by anyone when some quiet time is needed, and managed without needing physical access to the computer running Spotify.
+DJ Lamp is a Slack bot that controls an instance of Spotify. It can tell what song is playing, control playback (e.g. playing and pausing), play and queue song requests, and even pick its own songs to play based on the last song that played, if there are no queued requests. Run it on a machine with Spotify installed, connect it to your office speakers, and you and your whole office now have your very own personal Slack Bot DJ. Now, the whole office can collaboratively play nice music for the whole office without needing physical access to the computer running Spotify. 
 
 ## Features
 
-* Tells anyone which song is playing via Private Message (not to disturb anyone else).
+* Song Info: Tells anyone the name, artist, and Spotify URI of a song playing via Private Message (so as to not disturb anyone else).
 * Controls playback: play, pause and skip a song.
-* When controlling playback, it broadcasts on a dedicated Slack channel so everyone knows who is messing with the music.
-
-For now, there is no way to add songs to the playlist or to the play queue.  Adding to the playlist could be done by integrating with Spotify's Web API, but there is no way to queue songs as far as I'm aware.
+* Song requests: play any song on Spotify with a simple query.
+* Song queueing: add or remove songs from a queue to determine which songs will be played.
+* DJ mode: will automatically pick and play songs based on the last played song when the queue is empty
+* Channel Broadcast: Informs the whole channel when I go online or offline, someone plays or pauses playback, requests a song or removes it from the queue, etc.
 
 ## What you need
 
-* A computer (OS X only, for now) running Spotify, with a collaborative playlist.
-* Python (already included with OS X), `pip` and `virtualenv`.
+* A computer (Mac OS X only, for now) running Spotify.
+* Python and Ruby (already included with OS X), `pip`, and `brew`.
 * A Slack Bot integration setup and its API Key.
 * A Slack channel dedicated to your playlist for the bot to broadcast messages when needed.
+* A Spotify Premium Account (You can't get a Spotify Developer Account without a non-Premium account)
+* A Spotify application key
 
 ## Installing
 
@@ -27,67 +31,66 @@ If you don't have `pip`, you can get it with:
 sudo easy_install pip
 ```
 
-If you don't have `virtualenv`:
+If you don't have `brew`, you can get it with:
 
 ```shell
-sudo pip install virtualenv
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
-Clone the repository on your machine.  Then, create a virtual environment for managing dependencies.
+Clone the repository on your machine and then install the dependencies from the cloned repository's root folder.
 
 ```shell
-virtualenv venv
-```
-
-Activate the virtual environment.
-
-```shell
-source venv/bin/activate
-```
-
-Install the dependencies.
-
-```shell
+brew install mopidy/mopidy/libspotify
+xcode-select --install
 pip install -r requirements.txt
 ```
 
 ## Configuring and Running
 
-Make sure you have the following environment variables set:
+First, you'll need to create a Slack Bot integration. Go to https://slack.com/integrations, select "Bots", and then add a new Bot. Call it whatever you like; we suggest djlamp :). Then copy its API Token. You'll need it for later.
 
-* `SPOTIFYSLACK_SLACK_API_KEY`: your Bot integration API Key.
-* `SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL`: the Channel ID for your broadcast channel.
+Next, you'll need a Spotify application key. Again, you can only get one if you have a Spotify Premium account, so be sure to upgrade! Go to https://devaccount.spotify.com/my-account/keys and make a new app. Make a new application and then download the Binary Key (the C-Code one won't work) and move it to the cloned repository's root folder. 
 
-Then, if you haven't already for this session, activate the virtual environment.
+Then, you'll need to get your device username and set up a device password for the computer you will run DJ Lamp from. Go to https://www.spotify.com/us/account/set-device-password/ and click "Send Email To Set Password." Copy the username and save it for later. Use the link in the email message to create a new password. It DOES NOT have to be the same as your Spotify account password, and we recommend that you choose a different one as this password will be visible in a settings file on your computer. Copy the password and save it for later as well.
+
+Finally, You'll need to create a file called `private_settings.py` in the root folder of the cloned repository in the following format:
+
+* `SPOTIFYSLACK_SLACK_API_KEY = #your Bot integration API Key#`
+* `SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL = #the Channel ID for your broadcast channel#`
+* `SPOTIFYUSERNAME = #your Spotify app username#`
+* `SPOTIFYPASSWORD = #your Spotify app password#`
+
+You should now be good to go! Open Terminal, navigate to the root folder of the cloned repository, and run the following:
 
 ```shell
-source venv/bin/activate
+python djlamp.py
 ```
 
-Finally, run it.
-
-```shell
-python spotify.py
-```
-
-## TO-DOs:
-
-Non-exhaustive unordered list of future steps:
-
-* Search for songs and add to the collaborative playlist.
-* Add a song to the queue (depends on Spotify adding support on AppleScript API).
-* Supporting other operating systems (see below).
-* Package this nicely for a friendlier installation and usage.
-
-Feel free to contribute by implementing any of these features, implementing any anything else you may think of or fixing any bugs.
+Be sure to terminate DJ Lamp with `ctrl-c` when you're done, so people can't control your music when you don't want to! Also don't close Spotify while DJ Lamp is running! It immediately makes the entire world's puppy population start weeping. Seriously...
 
 ## Why OS X only?
 
-The bot uses AppleScript to talk to the Spotify client running on the computer.  The name kinda makes it obvious it is not supported on non-Apple operating systems.  As the office I work on had Spotify running on a Mac already, that was not an issue at the time.  There might be ways to control and get data from the player on Windows and Linux, I just haven't done any research on it for now.
+The bot uses AppleScript to talk to the Spotify client running on the computer. The name kinda makes it obvious it is not supported on non-Apple operating systems. There might be ways to control and get data from the player on Windows and Linux, but for now it's just Mac OS X.
+
+## Final Comments
+
+Again, this is a fork form Alexamdre Cisneiros' (Cisneiros) Spotify-Slack-Bot (https://github.com/Cisneiros/spotify-slack-bot). Thanks to him for creating a great project! Below is his original license:
+
+Copyright © 2015 Alexandre Cisneiros - www.cisneiros.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+
 
 ## License: MIT
 
-Copyright © 2015 Alexandre Cisneiros - www.cisneiros.com
+Copyright © 2015 Adam Zucker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

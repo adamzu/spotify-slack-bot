@@ -77,24 +77,25 @@ class SpotifySlackBot():
 
     def command_playback_skip(self, event):
         self.run_spotify_script('playback-skip','')
-        self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else")
+        self.sc.rtm_send_message(event['channel'], "Sure, let's listen to something else.")
         self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
         self.play_next_song()
 
     def command_help(self, event):
         self.sc.rtm_send_message(event['channel'],
-                                 "Hey, how are you?  I'm here to help you using our office playlist.\n"
+                                 "Hey, how are you?  I'm here to help you control our office music!\n"
                                  "I can give you some information about what is playing now and what will play afterwords, with the following commands:\n"
                                  "- `song` or `current`: I'll tell you which song is playing and who is the artist.\n"
                                  "- `requests` or `queue`: I'll tell you all the songs in the queue.\n"
                                  "\n"
-                                 "I can also control the playlist, with the following commands:\n"
+                                 "I can also control playback and take requests, with the following commands:\n"
                                  "- `play`: I'll resume playback of the playlist, if it is paused.\n"
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `request SONG`, `queue SONG`, or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
                                  "- `skip` or `next`: I'll skip the current song and play another one.\n"
+                                 "- `request SONG`, `queue SONG`, or `play SONG`: I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                 "- `remove NUMBER`: I'll remove the queued song in the position specified by NUMBER from the song queue (only works for songs you requested).\n"
                                  "\n"
-                                 "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
+                                 "*Please note:* When you give commands for me to control playback and take requests, *I'll advertise on #%s that you asked me to do it*,"
                                  " just so everyone knows what is going on. Please use these only if you really need to :)"
                                     % (self.broadcast_channel)
         )
