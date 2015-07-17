@@ -3,7 +3,7 @@
 
 *Bring life to your office with a collaboratively controlled Spotify session via Slack!*
 
-DJ Lamp is a Slack bot that controls an instance of Spotify on a particular computer. It can tell what song is playing, control playback (e.g. playing and pausing), play and queue song requests, and even pick its own songs to play based on the last song that played, if there are no queued requests. Run it on a machine with Spotify installed, connect it to your office speakers, and you and your whole office now have your very own personal Slack Bot DJ. Now, the everyone at the office can collaboratively play nice music for the whole office to hear without needing physical access to the computer running Spotify. 
+DJ Lamp is a Slack bot that controls an instance of Spotify on a particular computer. It can tell what song is playing, control playback (e.g. playing and pausing), play and queue song requests, and even pick its own songs to play based on the last song that played, if there are no queued requests. Run it on a machine with Spotify installed, connect it to your office speakers, and you and your whole office now have your very own personal Slack Bot DJ. Now, everyone at the office can collaboratively play nice music for the whole office to hear without needing physical access to the computer running Spotify. 
 
 ## Features
 
