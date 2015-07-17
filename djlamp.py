@@ -236,7 +236,11 @@ class SpotifySlackBot():
                             if re.match(expression, event['text']):
                                 function(event)
                                 break
-                position = self.get_player_position()
+                try:
+                    position = self.get_player_position()
+                except ValueError:
+                    position = [0, 'paused']
+                    time.sleep(3)
                 if position == [0, 'paused']:
                     self.play_next_song()
                 time.sleep(1)
