@@ -191,7 +191,7 @@ class SpotifySlackBot():
     
                 self.run_spotify_script('play-song', song_data['song_id'])
                 self.sc.rtm_send_message(self.broadcast_channel, message)
-            except ValueError:
+            except (ValueError, KeyError, IndexError):
                 self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
                 self.recommendations_broken = True
 
