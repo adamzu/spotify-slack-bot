@@ -12,7 +12,7 @@ DJ Lamp is a Slack bot that controls an instance of Spotify on a particular comp
 * Song requests: play any song on Spotify with a simple query.
 * Song queueing: add or remove songs from a queue to determine which songs will be played.
 * DJ mode: will automatically pick and play songs based on the last played song when the queue is empty
-* Channel Broadcast: Informs the whole channel when I go online or offline, someone plays or pauses playback, requests a song or removes it from the queue, etc.
+* Channel Broadcast: Informs the whole channel when DJ Lamp goes online or offline, someone plays or pauses playback, requests a song or removes it from the queue, etc.
 
 ## What you need
 
@@ -20,7 +20,7 @@ DJ Lamp is a Slack bot that controls an instance of Spotify on a particular comp
 * Python and Ruby (already included with OS X), `pip`, and `brew`.
 * A Slack Bot integration setup and its API Key.
 * A Slack channel dedicated to your playlist for the bot to broadcast messages when needed.
-* A Spotify Premium Account (You can't get a Spotify Developer Account without a non-Premium account)
+* A Spotify Premium Account (you can't get a Spotify Developer Account without a non-Premium account)
 * A Spotify application key
 
 ## Installing
@@ -74,7 +74,11 @@ The bot uses AppleScript to talk to the Spotify client running on the computer. 
 
 ## Final Comments
 
-Again, this is a fork form Alexamdre Cisneiros' (Cisneiros) Spotify-Slack-Bot (https://github.com/Cisneiros/spotify-slack-bot). Thanks to him for creating a great project! Below is his original license:
+DJ mode uses a song recommendation system created by Andrew Violino's (aviolino) djlamp feature (https://github.com/aviolino/djlamp). Thanks to him for providing the feature!
+
+Again, this is a fork from Alexandre Cisneiros' (Cisneiros) Spotify-Slack-Bot (https://github.com/Cisneiros/spotify-slack-bot). Thanks to him for creating a great project! Below is his original license, followed by our license:
+
+## Original License: MIT
 
 Copyright © 2015 Alexandre Cisneiros - www.cisneiros.com
 
@@ -84,11 +88,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-
-
-
-## License: MIT
+## DJ Lamp License: MIT
 
 Copyright © 2015 Adam Zucker
 
