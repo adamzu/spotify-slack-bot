@@ -89,7 +89,7 @@ class SpotifySlackBot():
                                  "I can also control the playlist, with the following commands:\n"
                                  "- `play`: I'll resume playback of the playlist, if it is paused.\n"
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `request SONG`, queue SONG`, or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                 "- `request SONG`, `queue SONG`, or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
                                  "- `skip` or `next`: I'll skip the current song and play another one.\n"
                                  "\n"
                                  "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
@@ -226,7 +226,7 @@ class SpotifySlackBot():
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
-            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a direct message for help (`hey` or `help` for help)!")
+            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a message (`hey` or `help` for help)!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
