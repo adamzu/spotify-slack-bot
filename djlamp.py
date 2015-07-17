@@ -54,6 +54,7 @@ class SpotifySlackBot():
         response = self.sc.api_call('users.list')
         self.users = json.loads(response)['members']
         self.song_queue = []
+        self.auto_queue = []
 
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
@@ -83,12 +84,12 @@ class SpotifySlackBot():
                                  "Hey, how are you?  I'm here to help you using our office playlist.\n"
                                  "I can give you some information about what is playing now and what will play afterwords, with the following commands:\n"
                                  "- `song` or `current`: I'll tell you which song is playing and who is the artist.\n"
-                                 "- `queue`: I'll tell you all the songs in the queue.\n"
+                                 "- `requests` or `queue`: I'll tell you all the songs in the queue.\n"
                                  "\n"
                                  "I can also control the playlist, with the following commands:\n"
                                  "- `play`: I'll resume playback of the playlist, if it is paused.\n"
                                  "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `queue SONG` or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                 "- `request SONG`, queue SONG`, or `play SONG` or : I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
                                  "- `skip` or `next`: I'll skip the current song and play another one.\n"
                                  "\n"
                                  "*Please note:* When you give commands to control the playlist, *I'll advertise on #%s that you asked me to do it*,"
@@ -100,7 +101,7 @@ class SpotifySlackBot():
         message =  "*Song Queue:*\n"
         num_songs = len(self.song_queue)
         if not self.song_queue:
-            message += "\tEMPTY"
+            message += "\tEMPTY! Request a song! DJ Lamp will spin the discs in the meantime ;)"
         else:
             for number, (song, requester, requester_channel) in enumerate(self.song_queue):
                 if(number > 9):
@@ -153,6 +154,7 @@ class SpotifySlackBot():
 
     def play_next_song(self):
         if self.song_queue:
+            self.auto_queue = []
             (song, requester, requester_channel) = self.song_queue.pop(0)
             song_data = _get_song_data(song)
             requester = self.get_username(requester)
@@ -161,11 +163,35 @@ class SpotifySlackBot():
             self.run_spotify_script('play-song', song_data['song_id'])
             self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.sc.rtm_send_message(self.broadcast_channel, message)
+            if not self.song_queue:
+                self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: There are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
         else:
-            self.auto_queue()
+            if not self.auto_queue:
+                self.auto_queue_songs()
+            song = self.auto_queue.pop(0)
+            song_query = song['artist'] + " " + song['title']
+            search = self.session.search(query=song_query)
+            search.load()
+            songs = search.tracks
+            if not songs:
+                song_query = song['artist'].replace(" & ", ", ") + " " + recommendation['title']
+                search = self.session.search(query=song_query)
+                search.load()
+                songs = search.tracks
+            if not songs:
+                self.play_next_song()
+            
+            song = songs[0]
+            song_data = _get_song_data(song)
+            message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
 
-    def auto_queue(self):
-        print "EMPTY"
+            self.run_spotify_script('play-song', song_data['song_id'])
+            self.sc.rtm_send_message(self.broadcast_channel, message)
+
+    def auto_queue_songs(self):
+        data = self.run_spotify_script('current-song','')
+        seed_song_id = data.strip().split('\n')[0]
+        self.auto_queue = _get_recommendations(seed_song_id)
 
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
@@ -192,15 +218,15 @@ class SpotifySlackBot():
             ('pause', self.command_playback_pause),
             ('skip|next', self.command_playback_skip),
             ('hey|help', self.command_help),
-            ('queue$', self.command_show_queue),
-            ('play .+|queue .+', self.command_queue_song),
+            ('queue$|requests$', self.command_show_queue),
+            ('play .+|queue .+|request .+', self.command_queue_song),
             ('remove [1-9]([0-9])*', self.command_remove_from_queue),
             ('.+', self.command_unknown)
         ]
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
-            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online and taking requests! Just send me a direct message (`hey` or `help` for help)!")
+            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a direct message for help (`hey` or `help` for help)!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
@@ -211,7 +237,6 @@ class SpotifySlackBot():
                                 function(event)
                                 break
                 position = self.get_player_position()
-                print position
                 if position == [0, 'paused']:
                     self.play_next_song()
                 time.sleep(1)
