@@ -57,8 +57,8 @@ Finally, You'll need to create a file called `private_settings.py` in the root f
 
 * `SPOTIFYSLACK_SLACK_API_KEY = #your Bot integration API Key#`
 * `SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL = #the Channel ID for your broadcast channel#`
-* `SPOTIFYUSERNAME = #your Spotify app username#`
-* `SPOTIFYPASSWORD = #your Spotify app password#`
+* `SPOTIFY_USERNAME = #your Spotify app username#`
+* `SPOTIFY_PASSWORD = #your Spotify app password#`
 
 You should now be good to go! Open Terminal, navigate to the root folder of the cloned repository, and run the following:
 

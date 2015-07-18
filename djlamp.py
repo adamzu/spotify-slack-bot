@@ -46,7 +46,7 @@ class SpotifySlackBot():
         self.session.on(
             spotify.SessionEvent.CONNECTION_STATE_UPDATED,
             connection_state_listener)
-        self.session.login(settings.SPOTIFYUSERNAME, settings.SPOTIFYPASSWORD)
+        self.session.login(settings.SPOTIFY_USERNAME, settings.SPOTIFY_PASSWORD)
         logged_in_event.wait()
         loop.stop()
         
