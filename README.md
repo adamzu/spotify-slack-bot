@@ -16,7 +16,7 @@ DJ Lamp is a Slack bot that controls an instance of Spotify on a particular comp
 
 ## What you need
 
-* A computer (Mac OS X only, for now) running Spotify.
+* A computer (Mac OS X only, for now) running Spotify (make sure it's Spotify version 1.0.9 or higher).
 * Python and Ruby (already included with OS X), `pip`, and `brew`.
 * A Slack Bot integration setup and its API Key.
 * A Slack channel dedicated to your playlist for the bot to broadcast messages when needed.
@@ -42,7 +42,7 @@ Clone the repository on your machine and then install the dependencies from the 
 ```shell
 brew install mopidy/mopidy/libspotify
 xcode-select --install
-pip install -r requirements.txt
+sudo pip install -r requirements.txt
 ```
 
 ## Configuring and Running

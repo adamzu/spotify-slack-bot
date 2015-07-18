@@ -1,3 +1,6 @@
 requests==2.7.0
 slackclient==0.15
 pyspotify==2.0.0
+pyopenssl==0.13.1
+ndg-httpsclient==0.4.0
+pyasn1==0.1.8
