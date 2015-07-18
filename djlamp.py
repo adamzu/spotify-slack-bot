@@ -241,7 +241,7 @@ class SpotifySlackBot():
                     print event
                     if event.get('type') == 'message' and event.get('channel')[0] == 'D':
                         for (expression, function) in commands:
-                            if re.match(expression, event['text']):
+                            if re.match(expression, event['text'], re.IGNORECASE):
                                 function(event)
                                 break
                 try:
