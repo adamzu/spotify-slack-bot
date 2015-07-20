@@ -168,7 +168,7 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.sc.rtm_send_message(self.broadcast_channel, message)
             if not self.song_queue:
-                self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: There are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
+                self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, there are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
         else:
             try:
                 if not self.auto_queue:
@@ -193,7 +193,7 @@ class SpotifySlackBot():
                 self.run_spotify_script('play-song', song_data['song_id'])
                 self.sc.rtm_send_message(self.broadcast_channel, message)
             except (ValueError, KeyError, IndexError):
-                self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
+                self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
                 self.recommendations_broken = True
 
     def auto_queue_songs(self):
@@ -234,7 +234,7 @@ class SpotifySlackBot():
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
-            self.sc.rtm_send_message(self.broadcast_channel, "<!channel>: DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a message (`hey` or `help` for help)!")
+            self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a message (`hey` or `help` for help)!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
@@ -268,5 +268,5 @@ if __name__ == '__main__':
         bot.run()
     except KeyboardInterrupt:
         print("\rDJ Lamp signing off!")
-        bot.sc.rtm_send_message(bot.broadcast_channel, "<!channel>: DJ Lamp signing off! See ya next time!")
+        bot.sc.rtm_send_message(bot.broadcast_channel, "Hey everyone, DJ Lamp signing off! See ya next time!")
         sys.exit(0)
