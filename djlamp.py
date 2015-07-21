@@ -58,6 +58,26 @@ class SpotifySlackBot():
         self.auto_queue = []
         self.recommendations_broken = False;
 
+    def command_help(self, event):
+            self.sc.rtm_send_message(event['channel'],
+                                     "Hey, how are you?  I'm here to help you control our office music!\n"
+                                     "I can give you some information about the player, the song that is playing now, and the songs that will play afterwards with the following commands:\n"
+                                     "- `song` or `current`: I'll tell you which song is playing and who is the artist.\n"
+                                     "- `requests` or `queue`: I'll tell you all the songs in the queue.\n"
+                                     "- `volume`: I'll tell you the current sound volume of the player (0 is minimum, 100 is maximum).\n"
+                                     "\n"
+                                     "I can also control playback and take requests, with the following commands:\n"
+                                     "- `play`: I'll resume playback of the playlist, if it is paused.\n"
+                                     "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
+                                     "- `skip` or `next`: I'll skip the current song and play another one.\n"
+                                     "- `request SONG`, `queue SONG`, or `play SONG`: I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
+                                     "- `remove NUMBER`: I'll remove the queued song in the position specified by NUMBER from the song queue (only works for songs you requested).\n"
+                                     "\n"
+                                     "*Please note:* When you give commands for me to control playback and take requests, *I'll advertise on #%s that you asked me to do it*,"
+                                     " just so everyone knows what is going on. Please use these only if you really need to :)"
+                                        % (self.broadcast_channel)
+            )
+
     def command_current_song(self, event):
         data = self.run_spotify_script('current-song','')
         data = data.strip().split('\n')
@@ -82,24 +102,9 @@ class SpotifySlackBot():
         self.sc.rtm_send_message(self.broadcast_channel, "*Skipping this song*, as requested by %s." % (self.get_username(event['user'])))
         self.play_next_song()
 
-    def command_help(self, event):
-        self.sc.rtm_send_message(event['channel'],
-                                 "Hey, how are you?  I'm here to help you control our office music!\n"
-                                 "I can give you some information about what is playing now and what will play afterwords, with the following commands:\n"
-                                 "- `song` or `current`: I'll tell you which song is playing and who is the artist.\n"
-                                 "- `requests` or `queue`: I'll tell you all the songs in the queue.\n"
-                                 "\n"
-                                 "I can also control playback and take requests, with the following commands:\n"
-                                 "- `play`: I'll resume playback of the playlist, if it is paused.\n"
-                                 "- `pause`: I'll pause the playback of the playlist, if it is playing.\n"
-                                 "- `skip` or `next`: I'll skip the current song and play another one.\n"
-                                 "- `request SONG`, `queue SONG`, or `play SONG`: I'll search Spotify for a song that matches your SONG query and then add it to the song queue.\n"
-                                 "- `remove NUMBER`: I'll remove the queued song in the position specified by NUMBER from the song queue (only works for songs you requested).\n"
-                                 "\n"
-                                 "*Please note:* When you give commands for me to control playback and take requests, *I'll advertise on #%s that you asked me to do it*,"
-                                 " just so everyone knows what is going on. Please use these only if you really need to :)"
-                                    % (self.broadcast_channel)
-        )
+    def command_current_volume(self, event):
+        volume = int(self.run_spotify_script('current-volume','').strip())
+        self.sc.rtm_send_message(event['channel'], "The current volume is *%s/100*" % volume)
 
     def command_show_queue(self, event):
         message =  "*Song Queue:*\n"
@@ -209,9 +214,9 @@ class SpotifySlackBot():
         return check_output(['./spotify.applescript'] + list(args))
 
     def get_player_position(self):
-        output = check_output(['./checkposition.applescript']).split("\n",1)
+        output = check_output(['./checkposition.applescript']).strip().split("\n")
         output[0] = float(output[0]) / 1000
-        output[1] = output[1].strip()
+        output[1] = output[1]
         return output
 
     def get_username(self, user_id):
@@ -222,11 +227,12 @@ class SpotifySlackBot():
     
     def run(self):
         commands = [
+            ('hey|help', self.command_help),
             ('song|current', self.command_current_song),
             ('play$', self.command_playback_play),
             ('pause', self.command_playback_pause),
             ('skip|next', self.command_playback_skip),
-            ('hey|help', self.command_help),
+            ('volume$', self.command_current_volume),
             ('queue$|requests$', self.command_show_queue),
             ('play .+|queue .+|request .+', self.command_queue_song),
             ('remove [1-9]([0-9])*', self.command_remove_from_queue),

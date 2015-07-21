@@ -19,6 +19,8 @@ on run {command, argument}
 		else if command is "playback-skip" then
 			previous track
 			pause
+		else if command is "current-volume" then
+			return sound volume as integer
 		else if command is "play-song" then
 			play track argument in context argument
 		end if
