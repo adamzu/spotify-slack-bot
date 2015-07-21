@@ -31,10 +31,11 @@ def _get_recommendations(song_id):
     return recommendations
 
 class SpotifySlackBot():
-    def __init__(self, api_key, broadcast_channel):
+    def __init__(self, api_key, broadcast_channel, dev):
         self.broadcast_channel = broadcast_channel
         self.sc = SlackClient(api_key)
         self.session = spotify.Session()
+        self.is_dev = dev
         
         logged_in_event = threading.Event()
         def connection_state_listener(session):
@@ -246,6 +247,8 @@ class SpotifySlackBot():
                                 break
                 try:
                     position = self.get_player_position()
+                    if self.is_dev:
+                        print position
                 except ValueError:
                     position = [0, 'paused']
                     time.sleep(3)
@@ -260,11 +263,13 @@ if __name__ == '__main__':
     print("DJ Lamp starting up...")
     try:
         channel = ""
+        dev = False
         if sys.argv[1] == 'dev':
             channel = "private-test-dj-lamp"
+            dev = True
         else:
             channel = settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL
-        bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, channel)
+        bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, channel, dev)
     except KeyboardInterrupt:
         print("\rDJ Lamp aborted")
         sys.exit(0)
