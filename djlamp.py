@@ -259,7 +259,12 @@ class SpotifySlackBot():
 if __name__ == '__main__':
     print("DJ Lamp starting up...")
     try:
-        bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL)
+        channel = ""
+        if sys.argv[1] == 'dev':
+            channel = "private-test-dj-lamp"
+        else:
+            channel = settings.SPOTIFYSLACK_SLACK_BROADCAST_CHANNEL
+        bot = SpotifySlackBot(settings.SPOTIFYSLACK_SLACK_API_KEY, channel)
     except KeyboardInterrupt:
         print("\rDJ Lamp aborted")
         sys.exit(0)

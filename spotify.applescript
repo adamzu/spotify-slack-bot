@@ -20,7 +20,7 @@ on run {command, argument}
 			previous track
 			pause
 		else if command is "play-song" then
-			play track argument
+			play track argument in context argument
 		end if
 		
 	end tell
