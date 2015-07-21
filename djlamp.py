@@ -104,7 +104,7 @@ class SpotifySlackBot():
 
     def command_current_volume(self, event):
         volume = int(self.run_spotify_script('current-volume','').strip())
-        self.sc.rtm_send_message(event['channel'], "The current volume is *%s/100*" % volume)
+        self.sc.rtm_send_message(event['channel'], "The current sound volume is *%s/100*" % volume)
 
     def command_show_queue(self, event):
         message =  "*Song Queue:*\n"

@@ -8,6 +8,7 @@ DJ Lamp is a Slack bot that controls an instance of Spotify on a particular comp
 ## Features
 
 * Song Info: Tells anyone the name, artist, and Spotify URI of a song playing via Private Message (so as to not disturb anyone else).
+* Sound volume: Tells anyone the current sound volume 
 * Controls playback: play, pause and skip a song.
 * Song requests: play any song on Spotify with a simple query.
 * Song queueing: add or remove songs from a queue to determine which songs will be played.
