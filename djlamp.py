@@ -270,7 +270,7 @@ if __name__ == '__main__':
     try:
         channel = ""
         dev = False
-        if sys.argv[1] == 'dev':
+        if len(sys.argv) >= 2 and sys.argv[1] == 'dev':
             channel = "private-test-dj-lamp"
             dev = True
         else:
