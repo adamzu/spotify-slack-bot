@@ -185,7 +185,7 @@ class SpotifySlackBot():
                 search.load()
                 songs = search.tracks
                 if not songs:
-                    song_query = song['artist'].replace(" & ", ", ") + " " + recommendation['title']
+                    song_query = song['artist'].replace(" & ", ", ") + " " + song['title']
                     search = self.session.search(query=song_query)
                     search.load()
                     songs = search.tracks
@@ -199,7 +199,7 @@ class SpotifySlackBot():
                 self.run_spotify_script('play-song', song_data['song_id'])
                 self.sc.rtm_send_message(self.broadcast_channel, message)
             except (ValueError, KeyError, IndexError):
-                self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
+                self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
                 self.recommendations_broken = True
 
     def auto_queue_songs(self):
@@ -241,7 +241,7 @@ class SpotifySlackBot():
         
         if self.sc.rtm_connect():
             print("DJ Lamp is online!")
-            self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a message (`hey` or `help` for help)!")
+            self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, DJ Lamp is now online! I'll be playing my own mix until someone requests a song. Just send me a message (`hey` or `help` for help)!")
             while True:
                 events = self.sc.rtm_read()
                 for event in events:
