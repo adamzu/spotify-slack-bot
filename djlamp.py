@@ -174,7 +174,7 @@ class SpotifySlackBot():
             self.sc.rtm_send_message(requester_channel, u"Now playing the song you requested: *%s* by *%s (%s)*!" % (song_data['song_name'], song_data['song_artists'], song_data['song_id']))
             self.sc.rtm_send_message(self.broadcast_channel, message)
             if not self.song_queue:
-                self.sc.rtm_send_message(self.broadcast_channel, "Hey everyone, there are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
+                self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, there are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
         else:
             try:
                 if not self.auto_queue:
@@ -284,5 +284,5 @@ if __name__ == '__main__':
         bot.run()
     except KeyboardInterrupt:
         print("\rDJ Lamp signing off!")
-        bot.sc.rtm_send_message(bot.broadcast_channel, "Hey everyone, DJ Lamp signing off! See ya next time!")
+        bot.sc.rtm_send_message(bot.broadcast_channel, "Hey, everyone, DJ Lamp signing off! See ya next time!")
         sys.exit(0)
