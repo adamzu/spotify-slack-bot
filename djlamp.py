@@ -27,8 +27,10 @@ def _get_song_data(song):
 def _get_recommendations(song_id):
     REQUEST_URL = "https://djlamp.herokuapp.com/api/recommend?id=%s" % song_id
     response = json.loads(requests.get(REQUEST_URL).content)
-    recommendations = response["results"]
-    return recommendations
+    if response.has_key("results"):
+        return response["results"]
+    print str(song_id)
+    return []
 
 class SpotifySlackBot():
     def __init__(self, api_key, broadcast_channel, dev):
@@ -138,11 +140,10 @@ class SpotifySlackBot():
             song_data = _get_song_data(song)
             requester = self.get_username(event['user'])
             message = u"%s added *%s* by *%s* (%s) to the song queue." % (requester, song_data['song_name'], song_data['song_artists'], song_data['song_id'])
-            
             self.sc.rtm_send_message(event['channel'], "Sure, added *%s* by *%s* (%s) to the queue (*#%s*)." % (song_data['song_name'], song_data['song_artists'], song_data['song_id'], position))
             self.sc.rtm_send_message(self.broadcast_channel, message)
-            self.recommendations_broken = False
             self.song_queue.append((song, event['user'], event['channel']))
+            self.recommendations_broken = False
 
     def command_remove_from_queue(self, event):
         number = int(event['text'].split()[1])
@@ -176,36 +177,36 @@ class SpotifySlackBot():
             if not self.song_queue:
                 self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, there are no more songs in the queue. After this song ends, I'll be playing my own mix until someone requests a song.")
         else:
-            try:
-                if not self.auto_queue:
-                        self.auto_queue_songs()
-                song = self.auto_queue.pop(0)
-                song_query = song['artist'] + " " + song['title']
+            if not self.auto_queue:
+                self.auto_queue = self.auto_queue_songs()
+            if not self.auto_queue:
+                self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
+                self.recommendations_broken = True
+                return
+            song = self.auto_queue.pop(0)
+            song_query = song['artist'] + " " + song['title']
+            search = self.session.search(query=song_query)
+            search.load()
+            songs = search.tracks
+            if not songs:
+                song_query = song['artist'].replace(" & ", ", ") + " " + song['title']
                 search = self.session.search(query=song_query)
                 search.load()
                 songs = search.tracks
-                if not songs:
-                    song_query = song['artist'].replace(" & ", ", ") + " " + song['title']
-                    search = self.session.search(query=song_query)
-                    search.load()
-                    songs = search.tracks
-                if not songs:
-                    self.play_next_song()
-                
-                song = songs[0]
-                song_data = _get_song_data(song)
-                message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
-    
-                self.run_spotify_script('play-song', song_data['song_id'])
-                self.sc.rtm_send_message(self.broadcast_channel, message)
-            except (ValueError, KeyError, IndexError):
-                self.sc.rtm_send_message(self.broadcast_channel, "Hey, everyone, I can't seem to access my DJ Lamp mix :(. It's probably an internet issue that should be fixed shortly. I can still take requests though, so tell me what you wanna hear!")
-                self.recommendations_broken = True
+            if not songs:
+                self.play_next_song()
+            
+            song = songs[0]
+            song_data = _get_song_data(song)
+            message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
+
+            self.run_spotify_script('play-song', song_data['song_id'])
+            self.sc.rtm_send_message(self.broadcast_channel, message)
 
     def auto_queue_songs(self):
         data = self.run_spotify_script('current-song','')
         seed_song_id = data.strip().split('\n')[0]
-        self.auto_queue = _get_recommendations(seed_song_id)
+        return _get_recommendations(seed_song_id)
 
     def command_unknown(self, event):
         self.sc.rtm_send_message(event['channel'], "Hey there! I kinda didn't get what you mean, sorry. If you need, just say `help` and I can tell you how I can be of use. ;)")
