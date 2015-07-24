@@ -29,7 +29,7 @@ def _get_recommendations(song_id):
     response = json.loads(requests.get(REQUEST_URL).content)
     if response.has_key("results"):
         return response["results"]
-    print str(song_id)
+    print "last.fm ERROR: No recommendations for " + str(song_id)
     return []
 
 class SpotifySlackBot():
