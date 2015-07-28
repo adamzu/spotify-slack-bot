@@ -199,9 +199,8 @@ class SpotifySlackBot():
                 song = songs[0]
                 song_data = _get_song_data(song)
                 message = u"Now playing *%s* by *%s* as part of my DJ Lamp mix. You can open the song on Spotify: %s" % (song_data['song_name'], song_data['song_artists'], song_data['song_id'])
-
-            self.run_spotify_script('play-song', song_data['song_id'])
-            self.sc.rtm_send_message(self.broadcast_channel, message)
+                self.run_spotify_script('play-song', song_data['song_id'])
+                self.sc.rtm_send_message(self.broadcast_channel, message)
 
     def auto_queue_songs(self):
         data = self.run_spotify_script('current-song','')
